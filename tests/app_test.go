@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"regexp"
+	"rwa/internal/realworld"
 	"strings"
 	"testing"
 	"time"
@@ -87,7 +88,7 @@ func TestApp(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 
 	var (
-		app = GetApp()
+		app = realworld.GetApp()
 		ts  = httptest.NewServer(app)
 
 		// username = RandStringRunes(16)
@@ -510,7 +511,7 @@ func TestApp(t *testing.T) {
 			defer resp.Body.Close()
 			respBody, err := ioutil.ReadAll(resp.Body)
 
-			// t.Logf("\nreq body: %s\nresp body: %s", body, respBody)
+			t.Logf("\nreq body: %s\nresp body: %s", body, respBody)
 
 			if item.ResponseStatus != resp.StatusCode {
 				t.Fatalf("bad status code, want: %v, have:%v", item.ResponseStatus, resp.StatusCode)
