@@ -45,23 +45,24 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := RegisterResponse{
-		Email:     user.Email,
-		Username:  user.Username,
-		CreatedAt: user.CreatedAt.GoString(),
-		UpdatedAt: user.UpdatedAt.GoString(),
+	res := map[string]interface{}{
+		"user": user,
 	}
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(res)
 }
 
-type LoginRequestData struct {
+type LoginData struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-type LoginResponse struct {
+type LoginRequestData struct {
+	User LoginData `json:"user"`
+}
+
+type LoginResponseData struct {
 	Email     string `json:"email"`
 	Username  string `json:"username"`
 	CreatedAt string `json:"createdAt"`
@@ -77,13 +78,13 @@ func (uh *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if loginData.Email == "" || loginData.Password == "" {
+	if loginData.User.Email == "" || loginData.User.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Email or Password is empty"))
 		return
 	}
 
-	user, err := uh.us.GetByEmail(loginData.Email)
+	user, err := uh.us.GetByEmail(loginData.User.Email)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		// TODO: ошибка может сообщить лишнее о системе
@@ -99,13 +100,15 @@ func (uh *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := LoginResponse{
+	logDataRes := LoginResponseData{
 		Email:     user.Email,
 		Username:  user.Username,
-		CreatedAt: user.CreatedAt.GoString(),
-		UpdatedAt: user.UpdatedAt.GoString(),
+		CreatedAt: user.CreatedAt.Format(timeFormat),
+		UpdatedAt: user.UpdatedAt.Format(timeFormat),
 		Token:     session.GetSessionId(),
 	}
+
+	res := map[string]interface{}{"user": logDataRes}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(res)
@@ -139,8 +142,16 @@ func (uh *UserHandler) Info(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	res := map[string]interface{}{
+		"user": user,
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(res)
+}
+
+type UpdateRequest struct {
+	User models.UserUpdateInfo `json:"user"`
 }
 
 func (uh *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
@@ -151,12 +162,13 @@ func (uh *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := models.UserUpdateInfo{}
-	err = json.NewDecoder(r.Body).Decode(&data)
+	reqData := UpdateRequest{}
+	err = json.NewDecoder(r.Body).Decode(&reqData)
 	if err != nil {
 		badJsonError(w)
 		return
 	}
+	data := reqData.User
 
 	user, err := uh.us.GetUserById(uId)
 	if err != nil {
@@ -172,6 +184,9 @@ func (uh *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	res := map[string]interface{}{
+		"user": updatedUser,
+	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(updatedUser)
+	json.NewEncoder(w).Encode(res)
 }

@@ -35,16 +35,18 @@ func createApi(router *mux.Router) {
 	authMiddleware := sessionGuard.GetAuthMiddleware()
 
 	router.HandleFunc("/api/users", userHandler.Register).Methods("POST")
-	router.HandleFunc("/api/users/login", userHandler.Register).Methods("POST")
+	router.HandleFunc("/api/users/login", userHandler.Login).Methods("POST")
 
 	ur := router.PathPrefix("/api/user").Subrouter()
-	ur.Use(authMiddleware)
-	ur.HandleFunc("/", userHandler.Info).Methods("GET")
-	ur.HandleFunc("/", userHandler.Update).Methods("PUT")
+	ur.HandleFunc("", userHandler.Info).Methods("GET")
+	ur.HandleFunc("", userHandler.Update).Methods("PUT")
 	ur.HandleFunc("/logout", userHandler.Logout).Methods("POST")
+	ur.Use(authMiddleware)
+
+	router.HandleFunc("/api/articles", articleHandler.Get).Methods("GET")
 
 	ar := router.PathPrefix("/api/articles").Subrouter()
 	ar.Use(authMiddleware)
-	ar.HandleFunc("/", articleHandler.Create).Methods("POST")
-	ar.HandleFunc("/", articleHandler.Get).Methods("GET")
+	ar.HandleFunc("", articleHandler.Create).Methods("POST")
+
 }

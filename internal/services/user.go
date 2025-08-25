@@ -59,20 +59,23 @@ func (us *UserService) CreateUser(info models.UserCreateInfo) (*models.User, err
 }
 
 func (us *UserService) UpdateUser(user models.User, newInfo models.UserUpdateInfo) (*models.User, error) {
-	err := newInfo.Validate()
-	if err != nil {
-		return nil, err
-	}
-
 	updated := time.Now()
 
 	user.UpdatedAt = updated
-	user.Email = newInfo.Email
-	user.Bio = newInfo.Bio
-	user.Username = newInfo.Username
-	user.Image = newInfo.Image
+	if newInfo.Email != "" {
+		user.Email = newInfo.Email
+	}
+	if newInfo.Bio != "" {
+		user.Bio = newInfo.Bio
+	}
+	if newInfo.Username != "" {
+		user.Username = newInfo.Username
+	}
+	if newInfo.Image != "" {
+		user.Image = newInfo.Image
+	}
 
-	err = us.userRepo.Update(user)
+	err := us.userRepo.Update(user)
 	return &user, err
 }
 

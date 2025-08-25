@@ -34,7 +34,7 @@ func (ft *FakeTime) UnmarshalJSON(data []byte) error {
 }
 
 type TestProfile struct {
-	ID        string   `json:"id" testdiff:"ignore"`
+	ID        int64    `json:"id" testdiff:"ignore"`
 	Email     string   `json:"email"`
 	CreatedAt FakeTime `json:"createdAt"`
 	UpdatedAt FakeTime `json:"updatedAt"`
@@ -214,14 +214,6 @@ func TestApp(t *testing.T) {
 			},
 			Before: func() {
 				tplParams["EMAIL"] = "u_" + tplParams["EMAIL"]
-			},
-			After: func(r *http.Response, body []byte, resp interface{}) error {
-				val, err := lookup.LookupString(resp, "User.Token")
-				if err != nil {
-					return err
-				}
-				tplParams["token1"] = val.String()
-				return nil
 			},
 		},
 		&ApiTestCase{
@@ -511,7 +503,7 @@ func TestApp(t *testing.T) {
 			defer resp.Body.Close()
 			respBody, err := ioutil.ReadAll(resp.Body)
 
-			t.Logf("\nreq body: %s\nresp body: %s", body, respBody)
+			t.Logf("\nreq token header: %s\nreq body: %s\nresp body: %s", req.Header.Get("Authorization"), body, respBody)
 
 			if item.ResponseStatus != resp.StatusCode {
 				t.Fatalf("bad status code, want: %v, have:%v", item.ResponseStatus, resp.StatusCode)

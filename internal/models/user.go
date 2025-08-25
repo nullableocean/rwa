@@ -6,7 +6,7 @@ import (
 )
 
 type User struct {
-	ID             int64     `json:"id"`
+	ID             int64     `json:"-"`
 	Email          string    `json:"email"`
 	Username       string    `json:"username"`
 	Bio            string    `json:"bio"`
@@ -39,17 +39,6 @@ func (info *UserCreateInfo) Validate() error {
 		return errors.New("Username is empty")
 	case info.Password:
 		return errors.New("Password is empty")
-	}
-
-	return nil
-}
-
-func (info *UserUpdateInfo) Validate() error {
-	switch "" {
-	case info.Email:
-		return errors.New("Email is empty")
-	case info.Username:
-		return errors.New("Username is empty")
 	}
 
 	return nil
