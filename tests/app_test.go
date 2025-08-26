@@ -263,7 +263,34 @@ func TestApp(t *testing.T) {
 				return nil
 			},
 		},
-
+		&ApiTestCase{
+			Name:           "Auth - Login econd user",
+			Method:         "POST",
+			Body:           "{\"user\":{\"email\":\"{{EMAIL2}}\", \"password\":\"{{PASSWORD}}\"}}",
+			URL:            "{{APIURL}}/users/login",
+			ResponseStatus: 200,
+			Expected: func() interface{} {
+				return &struct {
+					User TestProfile
+				}{
+					User: TestProfile{
+						Email:     tplParams["EMAIL2"],
+						CreatedAt: FakeTime{true},
+						UpdatedAt: FakeTime{true},
+						Username:  tplParams["USERNAME2"],
+					},
+				}
+			},
+			Before: nil,
+			After: func(r *http.Response, body []byte, resp interface{}) error {
+				val, err := lookup.LookupString(resp, "User.Token")
+				if err != nil {
+					return err
+				}
+				tplParams["token2"] = val.String()
+				return nil
+			},
+		},
 		&ApiTestCase{
 			Name:           "Articles - Create Article - First user",
 			Method:         "POST",
@@ -276,10 +303,6 @@ func TestApp(t *testing.T) {
 					Article TestArticle
 				}{
 					Article: TestArticle{
-						Author: TestProfile{
-							Bio:      tplParams["BIO"],
-							Username: tplParams["USERNAME"],
-						},
 						Body:        "Any ideas how to write some intermidiate layer atop collection?",
 						Title:       "How to write golang tests",
 						Description: "I have problem with mondodb mocking",
@@ -310,9 +333,6 @@ func TestApp(t *testing.T) {
 					Article TestArticle
 				}{
 					Article: TestArticle{
-						Author: TestProfile{
-							Username: tplParams["USERNAME2"],
-						},
 						Body:        "Will we use JWT-tokens in homework?",
 						Title:       "What will be released first, Half-Life 3 or 3-rd part of golang course?",
 						Description: "Who knows topics in new course?",
@@ -344,11 +364,7 @@ func TestApp(t *testing.T) {
 				}{
 					Articles: []TestArticle{
 						TestArticle{
-							Slug: tplParams["slug1"],
-							Author: TestProfile{
-								Bio:      tplParams["BIO"],
-								Username: tplParams["USERNAME"],
-							},
+							Slug:        tplParams["slug1"],
 							Body:        "Any ideas how to write some intermidiate layer atop collection?",
 							Title:       "How to write golang tests",
 							Description: "I have problem with mondodb mocking",
@@ -357,10 +373,7 @@ func TestApp(t *testing.T) {
 							TagList:     []string{"golang", "testing", "gomock"},
 						},
 						TestArticle{
-							Slug: tplParams["slug2"],
-							Author: TestProfile{
-								Username: tplParams["USERNAME2"],
-							},
+							Slug:        tplParams["slug2"],
 							Body:        "Will we use JWT-tokens in homework?",
 							Title:       "What will be released first, Half-Life 3 or 3-rd part of golang course?",
 							Description: "Who knows topics in new course?",
@@ -389,10 +402,7 @@ func TestApp(t *testing.T) {
 				}{
 					Articles: []TestArticle{
 						TestArticle{
-							Slug: tplParams["slug2"],
-							Author: TestProfile{
-								Username: tplParams["USERNAME2"],
-							},
+							Slug:        tplParams["slug2"],
 							Body:        "Will we use JWT-tokens in homework?",
 							Title:       "What will be released first, Half-Life 3 or 3-rd part of golang course?",
 							Description: "Who knows topics in new course?",
@@ -420,10 +430,7 @@ func TestApp(t *testing.T) {
 				}{
 					Articles: []TestArticle{
 						TestArticle{
-							Slug: tplParams["slug2"],
-							Author: TestProfile{
-								Username: tplParams["USERNAME2"],
-							},
+							Slug:        tplParams["slug2"],
 							Body:        "Will we use JWT-tokens in homework?",
 							Title:       "What will be released first, Half-Life 3 or 3-rd part of golang course?",
 							Description: "Who knows topics in new course?",
@@ -503,7 +510,7 @@ func TestApp(t *testing.T) {
 			defer resp.Body.Close()
 			respBody, err := ioutil.ReadAll(resp.Body)
 
-			t.Logf("\nreq token header: %s\nreq body: %s\nresp body: %s", req.Header.Get("Authorization"), body, respBody)
+			// t.Logf("\nreq token header: %s\nreq body: %s\nresp body: %s", req.Header.Get("Authorization"), body, respBody)
 
 			if item.ResponseStatus != resp.StatusCode {
 				t.Fatalf("bad status code, want: %v, have:%v", item.ResponseStatus, resp.StatusCode)

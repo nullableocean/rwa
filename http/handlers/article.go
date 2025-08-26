@@ -19,13 +19,20 @@ func NewArticleHandler(as *services.ArticleService, us *services.UserService) *A
 	}
 }
 
+type ArticleCreateRequest struct {
+	Article models.ArticleInfo `json:"article"`
+}
+
 func (h *ArticleHandler) Create(w http.ResponseWriter, r *http.Request) {
-	articleInfo := models.ArticleInfo{}
-	err := json.NewDecoder(r.Body).Decode(articleInfo)
+	articleReq := ArticleCreateRequest{}
+	err := json.NewDecoder(r.Body).Decode(&articleReq)
 	if err != nil {
-		badJsonError(w)
+		// badJsonError(w)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
 		return
 	}
+	articleInfo := articleReq.Article
 
 	uId, err := GetUserIdFromRequestCtx(r)
 	if err != nil {
@@ -48,8 +55,14 @@ func (h *ArticleHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	res := map[string]interface{}{"article": article}
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(article)
+	json.NewEncoder(w).Encode(res)
+}
+
+type ArticlesResponse struct {
+	Articles     []*models.Article `json:"articles"`
+	ArticleCount int               `json:"articlesCount"`
 }
 
 func (h *ArticleHandler) Get(w http.ResponseWriter, r *http.Request) {
@@ -83,6 +96,10 @@ func (h *ArticleHandler) Get(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	res := ArticlesResponse{
+		Articles:     articles,
+		ArticleCount: len(articles),
+	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(articles)
+	json.NewEncoder(w).Encode(res)
 }

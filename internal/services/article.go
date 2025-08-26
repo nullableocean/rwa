@@ -3,9 +3,13 @@ package services
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"rwa/internal/models"
+	"strings"
 	"time"
 )
+
+var nonAlphanumericRegex = regexp.MustCompile(`[^a-zA-Z0-9 ]+`)
 
 type ArticleRepository interface {
 	GetBySlug(string) (*models.Article, error)
@@ -27,9 +31,13 @@ func NewArticleService(articleRepo ArticleRepository) *ArticleService {
 }
 
 func (as *ArticleService) CreateArticle(user models.User, articleInfo models.ArticleInfo) (*models.Article, error) {
-	articleBySlug, _ := as.articleRepo.GetBySlug(articleInfo.Slug)
-	if articleBySlug != nil {
-		return nil, errors.New("slug must be unique")
+	if articleInfo.Slug != "" {
+		articleBySlug, _ := as.articleRepo.GetBySlug(articleInfo.Slug)
+		if articleBySlug != nil {
+			return nil, errors.New("slug must be unique")
+		}
+	} else {
+		articleInfo.Slug = as.generateSlug(articleInfo)
 	}
 
 	createdAt := time.Now()
@@ -117,4 +125,10 @@ func (as *ArticleService) GetAllByUser(user models.User, tags []string) ([]*mode
 	}
 
 	return articles, nil
+}
+
+func (as *ArticleService) generateSlug(articleInfo models.ArticleInfo) string {
+	title := articleInfo.Title
+
+	return strings.Join(strings.Split(strings.ToLower(nonAlphanumericRegex.ReplaceAllString(title, "")), " "), "-")
 }

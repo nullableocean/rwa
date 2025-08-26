@@ -94,6 +94,7 @@ func (r *ArticleRepository) Save(article models.Article) error {
 
 	r.store[slug] = article
 	r.saveSlugToUsersArticles(article.Author.ID, slug)
+	r.saveTagsAndSlug(article.TagList, article.Slug)
 
 	return nil
 }
@@ -157,6 +158,16 @@ func (r *ArticleRepository) saveSlugToUsersArticles(userId int64, slug string) {
 	}
 
 	r.usersArticles[userId] = append(r.usersArticles[userId], slug)
+}
+
+func (r *ArticleRepository) saveTagsAndSlug(tags []string, slug string) {
+	for _, t := range tags {
+		if _, ex := r.tags[t]; !ex {
+			r.tags[t] = make([]string, 0)
+		}
+
+		r.tags[t] = append(r.tags[t], slug)
+	}
 }
 
 func (r *ArticleRepository) deleteSlugFromUsersArticles(userId int64, slug string) {
